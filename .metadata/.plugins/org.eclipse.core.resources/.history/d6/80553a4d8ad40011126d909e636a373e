@@ -1,0 +1,31 @@
+spring.application.name=fine-service
+server.port=${PORT:8084}
+spring.datasource.url=${DB_URL:jdbc:postgresql://localhost:5432/fine_db}
+spring.datasource.username=${DB_USERNAME:postgres}
+spring.datasource.password=${DB_PASSWORD:changeme}
+
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.show-sql=true
+
+# Fine charged per late day
+fine.per-day=${FINE_PER_DAY:10.0}
+
+# Shared secret added by the API gateway (and by internal Feign calls) - must match archi-api-gateway.
+gateway.shared-secret=${GATEWAY_SECRET:ArchivaliaDevOnlyGatewaySecret-ChangeMe-0123456789}
+
+# Eureka - unique instance id so several instances can run side by side
+eureka.client.service-url.defaultZone=${EUREKA_URL:http://localhost:8761/eureka/}
+eureka.client.healthcheck.enabled=true
+eureka.instance.prefer-ip-address=true
+eureka.instance.instance-id=${spring.application.name}:${random.value}
+eureka.instance.lease-renewal-interval-in-seconds=5
+eureka.instance.lease-expiration-duration-in-seconds=15
+
+# Errors / Actuator
+server.error.include-stacktrace=never
+server.error.include-exception=false
+management.endpoints.web.exposure.include=health,info
+management.endpoint.health.show-details=always
+management.info.env.enabled=true
+info.app.name=Archivalia Fine Service
+info.app.description=Late-return fine calculation and management

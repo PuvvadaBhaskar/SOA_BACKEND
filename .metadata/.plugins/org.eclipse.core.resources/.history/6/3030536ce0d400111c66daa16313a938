@@ -1,0 +1,104 @@
+
+spring.application.name=archi-api-gateway
+
+server.port=${PORT:8080}
+
+# ===============================
+# Security Configuration
+# ===============================
+
+jwt.secret=${JWT_SECRET:ArchivaliaDevOnlyJwtSecret-ChangeMe-0123456789abcdefABCDEF}
+
+jwt.issuer=${JWT_ISSUER:archivalia-auth-service}
+
+gateway.shared-secret=${GATEWAY_SECRET:ArchivaliaDevOnlyGatewaySecret-ChangeMe-0123456789}
+
+# ===============================
+# Eureka Client Configuration
+# ===============================
+
+eureka.client.service-url.defaultZone=${EUREKA_URL:http://localhost:8761/eureka/}
+
+eureka.client.register-with-eureka=true
+eureka.client.fetch-registry=true
+
+eureka.client.registry-fetch-interval-seconds=5
+eureka.client.healthcheck.enabled=true
+
+eureka.instance.prefer-ip-address=true
+eureka.instance.instance-id=${spring.application.name}:${random.value}
+
+eureka.instance.lease-renewal-interval-in-seconds=5
+eureka.instance.lease-expiration-duration-in-seconds=15
+
+# ===============================
+# Spring Cloud LoadBalancer
+# ===============================
+
+spring.cloud.loadbalancer.cache.ttl=5s
+
+# ===============================
+# Gateway Discovery Locator
+# ===============================
+
+spring.cloud.gateway.server.webflux.discovery.locator.enabled=false
+
+spring.cloud.gateway.server.webflux.discovery.locator.lower-case-service-id=false
+
+# ===============================
+# AUTH SERVICE ROUTE
+# ===============================
+
+spring.cloud.gateway.server.webflux.routes[0].id=auth-service
+
+spring.cloud.gateway.server.webflux.routes[0].uri=lb://AUTH-SERVICE
+
+spring.cloud.gateway.server.webflux.routes[0].predicates[0]=Path=/auth/**
+
+# ===============================
+# BOOK SERVICE ROUTE
+# ===============================
+
+spring.cloud.gateway.server.webflux.routes[1].id=book-service
+
+spring.cloud.gateway.server.webflux.routes[1].uri=lb://BOOK-SERVICE
+
+spring.cloud.gateway.server.webflux.routes[1].predicates[0]=Path=/books/**
+
+# ===============================
+# BORROW SERVICE ROUTE
+# ===============================
+
+spring.cloud.gateway.server.webflux.routes[2].id=borrow-service
+
+spring.cloud.gateway.server.webflux.routes[2].uri=lb://BORROW-SERVICE
+
+spring.cloud.gateway.server.webflux.routes[2].predicates[0]=Path=/borrows/**
+
+# ===============================
+# FINE SERVICE ROUTE
+# ===============================
+
+spring.cloud.gateway.server.webflux.routes[3].id=fine-service
+
+spring.cloud.gateway.server.webflux.routes[3].uri=lb://FINE-SERVICE
+
+spring.cloud.gateway.server.webflux.routes[3].predicates[0]=Path=/fines/**
+
+# ===============================
+# Actuator Configuration
+# ===============================
+
+management.endpoints.web.exposure.include=health,info
+
+management.endpoint.health.show-details=always
+
+management.info.env.enabled=true
+
+# ===============================
+# Application Information
+# ===============================
+
+info.app.name=Archivalia API Gateway
+
+info.app.description=Single entry point: JWT validation, role-based routing rules, load balancing

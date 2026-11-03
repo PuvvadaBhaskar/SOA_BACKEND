@@ -1,0 +1,70 @@
+spring.application.name=borrow-service
+
+server.port=${PORT:8083}
+
+spring.datasource.url=${DB_URL:jdbc:postgresql://localhost:5432/borrow_db}
+spring.datasource.username=${DB_USERNAME:postgres}
+spring.datasource.password=${DB_PASSWORD:changeme}
+
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.show-sql=true
+
+# Shared secret added by the API gateway; also forwarded on Feign calls to book/fine-service.
+gateway.shared-secret=${GATEWAY_SECRET:ArchivaliaDevOnlyGatewaySecret-ChangeMe-0123456789}
+
+# ===============================
+# Borrowing rules
+# ===============================
+borrow.loan-days=7
+borrow.extension-days=7
+borrow.max-extensions=2
+# Background job that retries fine calculations that failed during a return
+borrow.fine-reconciler.enabled=true
+borrow.fine-reconciler.interval-ms=60000
+borrow.fine-reconciler.initial-delay-ms=30000
+
+# ===============================
+# Eureka - unique instance id so several instances can run side by side
+# ===============================
+eureka.client.service-url.defaultZone=${EUREKA_URL:http://localhost:8761/eureka/}
+eureka.client.healthcheck.enabled=true
+eureka.client.registry-fetch-interval-seconds=5
+eureka.instance.prefer-ip-address=true
+eureka.instance.instance-id=${spring.application.name}:${random.value}
+eureka.instance.lease-renewal-interval-in-seconds=5
+eureka.instance.lease-expiration-duration-in-seconds=15
+
+# Spring Cloud LoadBalancer (round-robin) used by Feign - short cache so new book-service instances join quickly
+spring.cloud.loadbalancer.cache.ttl=5s
+
+# ===============================
+# OpenFeign + Resilience4j
+# ===============================
+spring.cloud.openfeign.circuitbreaker.enabled=true
+spring.cloud.openfeign.circuitbreaker.alphanumeric-ids.enabled=true
+spring.cloud.openfeign.client.config.default.connect-timeout=2000
+spring.cloud.openfeign.client.config.default.read-timeout=3000
+spring.cloud.openfeign.client.config.default.logger-level=basic
+
+# Circuit breaker: open after 50% failures in the last 10 calls (min 5), stay open 10 s
+resilience.circuit-breaker.failure-rate-threshold=50
+resilience.circuit-breaker.sliding-window-size=10
+resilience.circuit-breaker.minimum-number-of-calls=5
+resilience.circuit-breaker.wait-duration-in-open-state-ms=10000
+# Time limiter: whole Feign call (including retries) must finish within 8 s
+resilience.time-limiter.timeout-ms=8000
+# Retry (Feign Retryer): up to 3 attempts, 200 ms -> 1 s back-off; non-idempotent calls only on connect failures
+resilience.retry.max-attempts=3
+resilience.retry.period-ms=200
+resilience.retry.max-period-ms=1000
+
+# ===============================
+# Errors / Actuator
+# ===============================
+server.error.include-stacktrace=never
+server.error.include-exception=false
+management.endpoints.web.exposure.include=health,info
+management.endpoint.health.show-details=always
+management.info.env.enabled=true
+info.app.name=Archivalia Borrow Service
+info.app.description=Borrow / return / extend workflow with circuit breakers and compensation

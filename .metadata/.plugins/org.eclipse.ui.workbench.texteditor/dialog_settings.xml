@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<section name="Workbench">
+	<section name="java.lang.Class">
+		<item key="replaceBarOpen" value="false"/>
+		<list key="findhistory">
+			<item value="mqsql"/>
+			<item value="mysql"/>
+			<item value="datga-jpa"/>
+			<item value="datajpa"/>
+		</list>
+	</section>
+</section>

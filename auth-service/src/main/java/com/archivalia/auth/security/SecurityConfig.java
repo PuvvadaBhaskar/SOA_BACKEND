@@ -1,0 +1,74 @@
+package com.archivalia.auth.security;
+
+import java.nio.charset.StandardCharsets;
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.SecurityFilterChain;
+
+import com.archivalia.auth.exception.ApiErrorBody;
+
+@Configuration
+public class SecurityConfig {
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
+
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http)
+            throws Exception {
+
+        http
+            .csrf(AbstractHttpConfigurer::disable)
+            .httpBasic(AbstractHttpConfigurer::disable)
+            .formLogin(AbstractHttpConfigurer::disable)
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .authorizeHttpRequests(auth -> auth
+            		.requestMatchers(
+            		        "/auth/register",
+            		        "/auth/login",
+
+            		        // Validates the Bearer token itself
+            		        "/auth/validate",
+
+            		        "/actuator/health",
+            		        "/actuator/health/**",
+            		        "/actuator/info",
+            		        "/error",
+
+            		        // Swagger / OpenAPI
+            		        "/swagger-ui/**",
+            		        "/swagger-ui.html",
+            		        "/v3/api-docs/**"
+            		).permitAll()
+                .anyRequest().authenticated()
+            )
+            .exceptionHandling(ex -> ex
+                .authenticationEntryPoint((request, response, authException) -> {
+                    response.setStatus(HttpStatus.UNAUTHORIZED.value());
+                    response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+                    response.setCharacterEncoding(StandardCharsets.UTF_8.name());
+                    response.getWriter().write(ApiErrorBody.toJson(HttpStatus.UNAUTHORIZED,
+                            "Authentication required", request.getRequestURI()));
+                })
+                .accessDeniedHandler((request, response, deniedException) -> {
+                    response.setStatus(HttpStatus.FORBIDDEN.value());
+                    response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+                    response.setCharacterEncoding(StandardCharsets.UTF_8.name());
+                    response.getWriter().write(ApiErrorBody.toJson(HttpStatus.FORBIDDEN,
+                            "Access denied", request.getRequestURI()));
+                })
+            );
+
+        return http.build();
+    }
+}
